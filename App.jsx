@@ -396,7 +396,7 @@ export default function SignalDesk() {
       <div className="header">
         <div className="eyebrow">
           Market Desk · Live Session
-          <span className="gl-badge">Greenlight friendly</span>
+          <span className="gl-badge">Fractional-share friendly</span>
           <span className="live-badge"><span className="live-dot" />LIVE</span>
         </div>
         <h1 className="h1">Bullpen</h1>

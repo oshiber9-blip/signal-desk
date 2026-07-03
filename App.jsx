@@ -399,7 +399,7 @@ export default function SignalDesk() {
           <span className="gl-badge">Greenlight friendly</span>
           <span className="live-badge"><span className="live-dot" />LIVE</span>
         </div>
-        <h1 className="h1">Signal Desk</h1>
+        <h1 className="h1">Bullpen</h1>
         <p className="sub">
           Live prices and news from Finnhub, refreshed every 60 seconds. Ranked by momentum, day-range
           strength, and news sentiment — sorted into defined short-swing (3–10 day) and long-term

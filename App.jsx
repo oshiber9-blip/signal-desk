@@ -38,11 +38,11 @@ function timeAgo(iso) {
 // Data fetching — combines quote + news per ticker into the screener shape.
 // ---------------------------------------------------------------------------
 async function fetchStock(entry) {
-  const [quoteRes, newsRes] = await Promise.all([
+  const [quoteRes, newsRes, chartRes] = await Promise.all([
     fetch(`/api/quote?symbol=${entry.ticker}`).then((r) => r.json()),
     fetch(`/api/news?symbol=${entry.ticker}`).then((r) => r.json()).catch(() => []),
+    fetch(`/api/chart?symbol=${entry.ticker}`).then((r) => r.json()).catch(() => []),
   ]);
-
   const price = quoteRes.c ?? 0;
   const change = quoteRes.dp ?? 0;
   const high = quoteRes.h ?? price;
@@ -74,7 +74,8 @@ async function fetchStock(entry) {
     target,
     stop,
     rr,
-    news: newsItems,
+  news: newsItems,
+    chart: Array.isArray(chartRes) ? chartRes : [],
     catalyst: newsItems[0]?.headline || "No recent headlines in the last 7 days.",
   };
 }
@@ -93,6 +94,29 @@ async function fetchEarnings() {
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
+function Sparkline({ data, positive }) {
+  if (!data || data.length < 2) return null;
+  const closes = data.map((d) => d.close);
+  const min = Math.min(...closes);
+  const max = Math.max(...closes);
+  const range = max - min || 1;
+  const w = 100, h = 34;
+  const points = closes
+    .map((c, i) => {
+      const x = (i / (closes.length - 1)) * w;
+      const y = h - ((c - min) / range) * h;
+      return `${x},${y}`;
+    })
+    .join(" ");
+  return (
+    <div>
+      <span className="chart-label">30-day trend</span>
+      <svg viewBox={`0 0 ${w} ${h}`} className="sparkline" preserveAspectRatio="none">
+        <polyline points={points} fill="none" stroke={positive ? "var(--up)" : "var(--down)"} strokeWidth="1.6" />
+      </svg>
+    </div>
+  );
+}
 // ---------------------------------------------------------------------------
 // UI pieces
 // ---------------------------------------------------------------------------
@@ -147,7 +171,7 @@ function Screener({ stocks, loading, error }) {
                 </div>
               </div>
             </div>
-
+<Sparkline data={s.chart} positive={s.change >= 0} />
             <div className="horizon-row">
               <span className={`horizon-tag ${s.horizon}`}>{s.horizon === "long" ? "Long-term watch" : "Short-term swing"}</span>
               <span className="hold-window">Hold: {HOLD_WINDOW[s.horizon]}</span>
@@ -353,7 +377,8 @@ export default function SignalDesk() {
         .level-value.target { color: var(--up); }
         .level-value.stop { color: var(--down); }
         .fractional-note { font-size: 10.5px; color: var(--muted); margin: 0 0 14px; font-style: italic; }
-
+.chart-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-family: 'IBM Plex Mono', monospace; }
+.sparkline { width: 100%; height: 40px; margin: 2px 0 12px; }
         .scores { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
         .scorebar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
         .scorebar-value { font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
